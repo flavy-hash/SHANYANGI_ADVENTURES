@@ -11,7 +11,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Anonymous visitor activity log (admin: Visitor activity). See config/analytics.php.
+        $middleware->web(append: [
+            \App\Http\Middleware\LogPageView::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

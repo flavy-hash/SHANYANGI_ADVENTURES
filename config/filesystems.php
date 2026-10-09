@@ -38,6 +38,20 @@ return [
             'report' => false,
         ],
 
+        // Images uploaded in the admin panel. Lives inside the protected media
+        // folder (config/media.php), so the website serves them through signed,
+        // session-bound URLs (App\Support\ProtectedMedia). The admin previews
+        // them through Laravel's signed /admin-media/{path} route.
+        'media' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/media/images'),
+            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/admin-media',
+            'visibility' => 'private',
+            'serve' => true,
+            'throw' => false,
+            'report' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
