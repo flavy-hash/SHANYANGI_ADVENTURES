@@ -1,5 +1,9 @@
+@use('App\Support\Navigation')
+@use('App\Support\ProtectedMedia')
+
 @php
-    $navItems = config('navigation.primary', []);
+    // Edited in the admin (Pages → Navigation menu); config/navigation.php until then.
+    $navItems = Navigation::primary();
     $languages = config('navigation.languages', []);
 
     $isActive = function (string $path): bool {
@@ -87,8 +91,8 @@
                                                 </a>
                                             </div>
 
-                                            @if ($preview['image'])
-                                                <img class="tm-mega-img" src="{{ $preview['image'] }}" alt="" loading="lazy" decoding="async" draggable="false">
+                                            @if ($previewSrc = ProtectedMedia::src($preview['image'], 800))
+                                                <img class="tm-mega-img" src="{{ $previewSrc }}" alt="" loading="lazy" decoding="async" draggable="false">
                                             @endif
                                         </div>
                                     @endforeach

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', ($activeLabel ? $activeLabel.' ' : '').'Accommodation | Shanyangi Adventures')
-@section('description', 'Safari lodges, tented camps and beach stays in the Serengeti, Ngorongoro, Karatu and Zanzibar.')
+@section('description', 'Safari lodges, tented camps and beach stays across Tanzania'.($locations ? ': '.implode(', ', $locations) : '').'.')
 
 @section('content')
     <x-page-hero
@@ -27,13 +27,13 @@
                 <div class="tm-card-grid mt-10">
                     @foreach ($stays as $stay)
                         <x-info-card
-                            :title="$stay['name']"
-                            :href="route('contact', ['trip' => 'Stay: '.$stay['name']]).'#request'"
-                            :image="$stay['image']"
-                            :pill="$locations[$stay['location']] ?? null"
-                            :chips="[$stay['type'], $stay['level']]"
-                            :text="$stay['text']"
-                            link-label="Enquire"
+                            :title="$stay->name"
+                            :href="$stay->url"
+                            :image="$stay->image"
+                            :pill="$stay->location"
+                            :chips="array_values(array_filter([$stay->type, $stay->level]))"
+                            :text="$stay->description"
+                            link-label="View stay & photos"
                         />
                     @endforeach
                 </div>

@@ -10,6 +10,7 @@ use App\Filament\Widgets\PackagesByCategoryChart;
 use App\Filament\Widgets\ReviewRatingsChart;
 use App\Filament\Widgets\SiteOverview;
 use App\Models\NewsletterSubscriber;
+use App\Models\Package;
 use App\Models\TripRequest;
 use App\Models\User;
 use Database\Seeders\ContentSeeder;
@@ -112,7 +113,7 @@ class AdminDashboardTest extends TestCase
     {
         $data = $this->chartData(PackagesByCategoryChart::class);
 
-        $this->assertSame(8, array_sum($data['datasets'][0]['data']));
+        $this->assertSame(Package::query()->published()->count(), array_sum($data['datasets'][0]['data']));
         $this->assertContains('Kilimanjaro', $data['labels']);
     }
 }

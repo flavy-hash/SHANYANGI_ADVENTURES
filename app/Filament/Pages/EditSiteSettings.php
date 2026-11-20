@@ -3,9 +3,12 @@
 namespace App\Filament\Pages;
 
 use App\Models\SiteSetting;
+use App\Support\BankDetails;
 use App\Support\SocialLinks;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -19,7 +22,8 @@ use Filament\Support\Icons\Heroicon;
 use UnitEnum;
 
 /**
- * Official social media links shown in the footer, contact page and mobile menu.
+ * Social media links (footer, contact page, mobile menu) and the bank accounts
+ * printed on quotation PDFs.
  *
  * @property-read Schema $form
  */
@@ -42,7 +46,15 @@ class EditSiteSettings extends Page
 
     public function mount(): void
     {
-        $this->form->fill(['social' => SocialLinks::urls()]);
+        $bank = SiteSetting::raw(BankDetails::KEY) ?? [];
+
+        $this->form->fill([
+            'social' => SocialLinks::urls(),
+            'bank' => [
+                'accounts' => array_values((array) ($bank['accounts'] ?? [])),
+                'note' => $bank['note'] ?? 'Please use the quotation reference as the payment reference. International transfer charges are paid by the sender.',
+            ],
+        ]);
     }
 
     public function form(Schema $schema): Schema
@@ -64,6 +76,33 @@ class EditSiteSettings extends Page
                     ->statePath('social')
                     ->columns(2)
                     ->schema($fields),
+                Section::make('Bank details')
+                    ->description('Printed in the "Payment details" box of every quotation PDF (you can switch it off per quote). Add one account per currency if you have several.')
+                    ->icon(Heroicon::OutlinedBuildingLibrary)
+                    ->statePath('bank')
+                    ->schema([
+                        Repeater::make('accounts')
+                            ->hiddenLabel()
+                            ->schema([
+                                TextInput::make('bank_name')->label('Bank name')->required()->maxLength(120)->placeholder('e.g. CRDB Bank PLC'),
+                                TextInput::make('account_name')->label('Account name')->maxLength(120)->placeholder('e.g. Shanyangi Adventures Ltd'),
+                                TextInput::make('account_number')->label('Account number')->required()->maxLength(60),
+                                TextInput::make('branch')->maxLength(120)->placeholder('e.g. Arusha Branch'),
+                                TextInput::make('swift')->label('SWIFT / BIC code')->maxLength(20)->placeholder('For international transfers'),
+                                TextInput::make('currency')->maxLength(10)->placeholder('USD or TZS'),
+                            ])
+                            ->columns(3)
+                            ->itemLabel(fn (array $state) => trim(($state['bank_name'] ?? '').(filled($state['currency'] ?? null) ? ' · '.$state['currency'] : '')) ?: 'Bank account')
+                            ->addActionLabel('Add bank account')
+                            ->defaultItems(0)
+                            ->reorderableWithButtons()
+                            ->collapsible(),
+                        Textarea::make('note')
+                            ->label('Payment instructions')
+                            ->rows(2)
+                            ->maxLength(500)
+                            ->helperText('Shown under the accounts on the quote, e.g. deposit amount or who pays transfer charges.'),
+                    ]),
             ]);
     }
 
@@ -86,9 +125,14 @@ class EditSiteSettings extends Page
 
     public function save(): void
     {
-        $social = array_map(fn ($url) => $url ?: null, $this->form->getState()['social'] ?? []);
+        $state = $this->form->getState();
+        $social = array_map(fn ($url) => $url ?: null, $state['social'] ?? []);
 
         SiteSetting::put(SocialLinks::KEY, $social);
+        SiteSetting::put(BankDetails::KEY, [
+            'accounts' => array_values($state['bank']['accounts'] ?? []),
+            'note' => $state['bank']['note'] ?? null,
+        ]);
 
         Notification::make()->title('Site settings saved')->success()->send();
     }

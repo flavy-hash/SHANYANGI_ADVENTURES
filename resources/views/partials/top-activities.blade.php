@@ -33,7 +33,7 @@
         ],
     ];
 
-    $imageUrl = fn (?string $image) => str_starts_with((string) $image, 'http') ? $image : ProtectedMedia::imageUrl($image);
+    $imageUrl = fn (?string $image) => str_starts_with((string) $image, 'http') ? $image : ProtectedMedia::imageUrl($image, 1200);
 @endphp
 
 <section id="activities" class="bg-tm-beige py-16 sm:py-24" aria-labelledby="activities-title">

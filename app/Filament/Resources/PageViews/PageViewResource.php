@@ -4,6 +4,7 @@ namespace App\Filament\Resources\PageViews;
 
 use App\Filament\Resources\PageViews\Pages\ManagePageViews;
 use App\Models\PageView;
+use App\Support\GeoIp;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -41,7 +42,7 @@ class PageViewResource extends Resource
     {
         return $table
             ->defaultSort('created_at', 'desc')
-            ->description('Anonymous: no cookies, IP addresses or personal details are stored. A visitor ID only groups views from the same visitor on the same day. Records older than '.config('analytics.retention_days').' days are deleted automatically.')
+            ->description('Anonymous: no cookies, IP addresses or personal details are stored. A visitor ID only groups views from the same visitor on the same day; the country is looked up on this server (IP geolocation by DB-IP.com). Records older than '.config('analytics.retention_days').' days are deleted automatically.')
             ->columns([
                 TextColumn::make('created_at')
                     ->label('Time')
@@ -65,6 +66,10 @@ class PageViewResource extends Resource
                         'tablet' => Heroicon::OutlinedDeviceTablet,
                         default => Heroicon::OutlinedComputerDesktop,
                     }),
+                TextColumn::make('country')
+                    ->formatStateUsing(fn (?string $state) => trim(GeoIp::flag($state).' '.GeoIp::name($state)))
+                    ->placeholder('Unknown')
+                    ->sortable(),
                 TextColumn::make('referrer_host')
                     ->label('Came from')
                     ->placeholder('Direct / internal'),
@@ -89,6 +94,12 @@ class PageViewResource extends Resource
                 SelectFilter::make('package')
                     ->label('Tour')
                     ->relationship('package', 'title'),
+                SelectFilter::make('country')
+                    ->options(fn () => PageView::query()->whereNotNull('country')->distinct()->pluck('country')
+                        ->mapWithKeys(fn (string $code) => [$code => GeoIp::name($code)])
+                        ->sort()
+                        ->all())
+                    ->searchable(),
                 SelectFilter::make('device')
                     ->options(['mobile' => 'Mobile', 'tablet' => 'Tablet', 'desktop' => 'Desktop']),
             ])

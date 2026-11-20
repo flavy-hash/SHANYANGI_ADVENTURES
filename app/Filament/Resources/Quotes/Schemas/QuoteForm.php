@@ -2,7 +2,11 @@
 
 namespace App\Filament\Resources\Quotes\Schemas;
 
+use App\Filament\Pages\EditSiteSettings;
 use App\Models\Package;
+use App\Support\BankDetails;
+use Filament\Forms\Components\Toggle;
+use Illuminate\Support\HtmlString;
 use App\Models\Quote;
 use App\Support\QuotePdf;
 use Filament\Forms\Components\DatePicker;
@@ -46,6 +50,12 @@ class QuoteForm
                             ->default(now()->addDays(config('quotes.validity_days')))
                             ->native(false)
                             ->displayFormat('j M Y'),
+                        Toggle::make('show_bank_details')
+                            ->label('Show bank details on the PDF')
+                            ->default(true)
+                            ->helperText(fn () => BankDetails::isConfigured()
+                                ? new HtmlString('Accounts from <a href="'.e(EditSiteSettings::getUrl()).'" class="underline" target="_blank">Site settings</a>: '.e(collect(BankDetails::accounts())->map(fn ($a) => $a['bank_name'].(filled($a['currency'] ?? null) ? ' ('.$a['currency'].')' : ''))->implode(', ')).'.')
+                                : new HtmlString('No bank accounts yet. Add them in <a href="'.e(EditSiteSettings::getUrl()).'" class="underline" target="_blank">Site settings → Bank details</a>.')),
                     ]),
                 Section::make('Trip')
                     ->columnSpan(2)

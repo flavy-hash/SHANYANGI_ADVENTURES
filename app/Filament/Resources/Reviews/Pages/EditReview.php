@@ -13,6 +13,7 @@ class EditReview extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            ReviewResource::approveAction()->after(fn () => $this->refreshFormData(['is_published'])),
             DeleteAction::make(),
         ];
     }

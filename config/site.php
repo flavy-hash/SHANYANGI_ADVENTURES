@@ -37,6 +37,14 @@ return [
         ['name' => 'SafariBookings', 'logo' => 'images/s-b-logo_pdf.webp', 'url' => env('SITE_SAFARIBOOKINGS_URL')],
         ['name' => 'Tanzania National Parks', 'logo' => 'images/taifa-logo.webp', 'url' => null],
         ['name' => 'Tanzania Tourist Board', 'logo' => 'images/TTB-Logo.webp', 'url' => null],
+        ['name' => 'Tanzania Association of Tour Operators (TATO)', 'logo' => 'images/Logo-TATO-Tanzania-Association-of-Tour-Operators-tr.webp', 'url' => null],
+        ['name' => 'African Travel & Tourism Association (ATTA)', 'logo' => 'images/atta-logo.webp', 'url' => null],
+    ],
+
+    // "We accept" row in the footer (image in public/images). Set to null to hide it.
+    'payment_cards' => [
+        'image' => 'images/payment-cards.webp',
+        'label' => 'Visa, Mastercard, American Express and Discover',
     ],
 
     // Footer social icons: only the ones with a URL are shown.

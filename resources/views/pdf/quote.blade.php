@@ -7,8 +7,12 @@
     $items = $quote->items ?? [];
     $nights = $quote->travel_start && $quote->travel_end ? $quote->travel_start->diffInDays($quote->travel_end) : null;
 
-    // Acacia mark (resources/pdf/logo.png), embedded so the PDF needs no web request.
+    // Logo (resources/pdf/logo.png, from public/images/shanyangi.jpeg), embedded so the PDF needs no web request.
     $logo = 'data:image/png;base64,'.base64_encode(file_get_contents(resource_path('pdf/logo.png')));
+
+    // Bank accounts from Admin → Site settings → Bank details (App\Support\BankDetails).
+    $bankAccounts = $quote->show_bank_details ? \App\Support\BankDetails::accounts() : [];
+    $bankNote = \App\Support\BankDetails::note();
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -24,8 +28,6 @@
         .green { color: #395643; }
 
         .header td { vertical-align: top; }
-        .brand-name { font-size: 17px; font-weight: bold; color: #23331f; letter-spacing: 0.5px; }
-        .brand-sub { font-size: 8.5px; letter-spacing: 3px; color: #6b7468; }
         .company { font-size: 9.5px; line-height: 1.55; margin-top: 6px; }
         .doc-title { font-size: 22px; font-weight: bold; color: #23331f; text-align: right; letter-spacing: 1px; }
         .meta { margin-top: 6px; }
@@ -52,6 +54,13 @@
         .totals tr.grand td { background: #395643; color: #fff; font-size: 13px; font-weight: bold; padding: 10px; }
 
         .notes { margin-top: 22px; padding: 12px 14px; border-left: 3px solid #b06e1f; background: #fbf8f2; }
+        .payment { margin-top: 18px; border: 1px solid #d9e1d3; border-radius: 6px; padding: 12px 14px; background: #f4f7f1; page-break-inside: avoid; }
+        .payment .box-title { color: #395643; }
+        .bank td.account { vertical-align: top; padding: 4px 14px 4px 0; }
+        .bank .kv td { padding: 1px 0; font-size: 9.5px; }
+        .bank .kv td.k { width: 42%; }
+        .payment-ref { margin-top: 8px; font-size: 9.5px; }
+        .payment-note { margin-top: 4px; font-size: 9px; color: #6b7468; }
         .terms { margin-top: 18px; font-size: 9px; color: #6b7468; }
         .terms ol { margin: 4px 0 0; padding-left: 16px; }
         .footer { position: fixed; bottom: -44px; left: 0; right: 0; font-size: 8.5px; color: #6b7468; text-align: center; border-top: 1px solid #e6dfcf; padding-top: 8px; }
@@ -67,15 +76,7 @@
     <table class="header">
         <tr>
             <td style="width: 55%;">
-                <table>
-                    <tr>
-                        <td style="width: 70px; vertical-align: middle;"><img src="{{ $logo }}" style="width: 60px; height: 44px;" alt=""></td>
-                        <td style="vertical-align: middle;">
-                            <div class="brand-name">SHANYANGI</div>
-                            <div class="brand-sub">ADVENTURES</div>
-                        </td>
-                    </tr>
-                </table>
+                <img src="{{ $logo }}" style="width: 190px; height: 67px;" alt="Shanyangi Adventures &amp; Safaris">
                 <div class="company muted">
                     Tanzania safaris, Kilimanjaro climbs &amp; Zanzibar escapes<br>
                     @if ($site['address']){{ $site['address'] }}<br>@endif
@@ -177,6 +178,34 @@
         </div>
     @endif
 
+    @if ($bankAccounts)
+        <div class="payment">
+            <div class="box-title">Payment details</div>
+            <table class="bank">
+                @foreach (array_chunk($bankAccounts, 2) as $row)
+                    <tr>
+                        @foreach ($row as $account)
+                            <td class="account" style="width: 50%;">
+                                <table class="kv">
+                                    @foreach (\App\Support\BankDetails::FIELDS as $field => $label)
+                                        @if (filled($account[$field] ?? null))
+                                            <tr><td class="k">{{ $label }}</td><td class="v">{{ $account[$field] }}</td></tr>
+                                        @endif
+                                    @endforeach
+                                </table>
+                            </td>
+                        @endforeach
+                        @if (count($row) === 1)<td style="width: 50%;"></td>@endif
+                    </tr>
+                @endforeach
+            </table>
+            <p class="payment-ref">Payment reference: <strong>{{ $quote->reference }}</strong></p>
+            @if ($bankNote)
+                <p class="payment-note">{{ $bankNote }}</p>
+            @endif
+        </div>
+    @endif
+
     <div class="terms">
         <strong class="green">Terms</strong>
         <ol>
@@ -184,7 +213,7 @@
                 <li>{{ $term }}</li>
             @endforeach
         </ol>
-        <p style="margin-top: 10px;">Thank you for considering Shanyangi Adventures. To accept this quotation or ask a question, simply reply to our email quoting <strong>{{ $quote->reference }}</strong>.</p>
+        <p style="margin-top: 10px;">Thank you for considering Shanyangi Adventures. To accept this quotation or ask a question, simply reply to our email quoting reference {{ $quote->reference }}.</p>
     </div>
 </body>
 </html>

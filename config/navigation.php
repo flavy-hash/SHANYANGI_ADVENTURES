@@ -23,6 +23,13 @@ return [
             'children' => [
                 ['label' => 'All Safaris', 'path' => '/safaris'],
                 [
+                    'label' => 'Find a Tour', 'path' => '/tours',
+                    'title' => 'Find Your Tour',
+                    'text' => 'Every trip in one place: filter by trip type and length, compare prices and routes, then make it your own.',
+                    'cta' => 'Browse all tours',
+                    'image' => 'https://images.unsplash.com/photo-1535941339077-2dd1c7963098?auto=format&fit=crop&w=800&q=75',
+                ],
+                [
                     'label' => 'Honeymoon', 'path' => '/safaris?type=honeymoon',
                     'title' => 'Honeymoon Safaris',
                     'text' => 'Private game drives, sundowners for two and intimate tented camps, then barefoot days on Zanzibar\'s beaches.',
