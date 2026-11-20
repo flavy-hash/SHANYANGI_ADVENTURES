@@ -14,7 +14,7 @@
 {{-- Generic card for activities, stays and blog posts. The title link covers the whole card. --}}
 <article class="tm-info-card">
     <div class="tm-info-media">
-        @if ($src = ProtectedMedia::src($image))
+        @if ($src = ProtectedMedia::src($image, 800))
             <img src="{{ $src }}" alt="" loading="lazy" decoding="async" draggable="false">
         @endif
         @if ($pill)
