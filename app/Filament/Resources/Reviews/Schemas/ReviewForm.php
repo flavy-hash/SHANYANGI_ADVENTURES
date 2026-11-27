@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Reviews\Schemas;
 
 use App\Filament\Support\MediaUpload;
+use App\Models\Review;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -57,6 +59,12 @@ class ReviewForm
                 Section::make('Settings')
                     ->columnSpan(1)
                     ->schema([
+                        TextEntry::make('submitted_by')
+                            ->label('Written on the website by')
+                            ->state(fn (?Review $record) => $record?->email)
+                            ->url(fn (?Review $record) => $record?->email ? 'mailto:'.$record->email : null)
+                            ->helperText('Private: never shown on the website.')
+                            ->visible(fn (?Review $record) => $record?->source === 'website'),
                         Toggle::make('is_published')
                             ->label('Published')
                             ->default(true),

@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Filament\Resources\TripRequests\TripRequestResource;
 use App\Mail\TripRequestReceived;
 use App\Models\TripRequest;
+use App\Support\AdminAlerts;
+use App\Support\BookingEmails;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
-use Throwable;
 
 class TripRequestController extends Controller
 {
@@ -34,15 +34,15 @@ class TripRequestController extends Controller
             'interests' => array_values($data['interests'] ?? []),
         ]);
 
-        // Notify the office. The request is already saved, so a mail failure must not
-        // cost the visitor their submission; log it instead.
-        if ($to = config('site.email')) {
-            try {
-                Mail::to($to)->send(new TripRequestReceived($tripRequest));
-            } catch (Throwable $e) {
-                Log::error('Trip request email failed', ['trip_request_id' => $tripRequest->id, 'error' => $e->getMessage()]);
-            }
-        }
+        // Notify the office by email and with a bell alert in the admin.
+        BookingEmails::send(new TripRequestReceived($tripRequest), ['trip_request_id' => $tripRequest->id]);
+
+        AdminAlerts::send(
+            'New trip request from '.$tripRequest->name,
+            collect([$tripRequest->trip, $tripRequest->travel_date?->format('j M Y'), $tripRequest->adults.' adult(s)'])->filter()->implode(' · '),
+            TripRequestResource::getUrl('view', ['record' => $tripRequest], panel: 'admin'),
+            'heroicon-o-paper-airplane',
+        );
 
         return $this->success($tripRequest->name);
     }

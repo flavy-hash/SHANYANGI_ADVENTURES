@@ -16,4 +16,5 @@ Budget:      {!! TripRequest::BUDGETS[$tripRequest->budget] ?? '-' !!}
 Message:
 {!! $tripRequest->message ?: '-' !!}
 
-Reply to this email to answer {!! $tripRequest->name !!} directly.
+Reply to this email to answer {!! $tripRequest->name !!} directly, or open the request in the admin:
+{!! \App\Filament\Resources\TripRequests\TripRequestResource::getUrl('view', ['record' => $tripRequest], panel: 'admin') !!}

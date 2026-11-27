@@ -314,7 +314,214 @@ const initHeroParallax = () => {
     window.addEventListener('resize', queue, { passive: true });
 };
 
+// Photo picker (write-a-review form): previews, drag & drop, remove, and the same
+// limits the server checks (count, type, size). Picking again adds to the selection.
+const initPhotoPickers = () => {
+    const MAX_BYTES = 8 * 1024 * 1024;
+    const TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+    document.querySelectorAll('[data-photo-picker]').forEach((picker) => {
+        const input = picker.querySelector('input[type="file"]');
+        const drop = picker.querySelector('.tm-photo-drop');
+        const previews = picker.querySelector('[data-photo-previews]');
+        const error = picker.querySelector('[data-photo-error]');
+        const max = Number(picker.dataset.max) || 4;
+        let files = [];
+
+        const showError = (text) => {
+            error.textContent = text ?? '';
+            error.hidden = !text;
+            drop.classList.toggle('is-invalid', Boolean(text));
+        };
+
+        const sync = () => {
+            const transfer = new DataTransfer();
+            files.forEach((file) => transfer.items.add(file));
+            input.files = transfer.files;
+
+            previews.querySelectorAll('img').forEach((img) => URL.revokeObjectURL(img.src));
+            previews.replaceChildren(...files.map((file, index) => {
+                const item = document.createElement('li');
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                img.alt = '';
+                const remove = document.createElement('button');
+                remove.type = 'button';
+                remove.className = 'tm-photo-remove';
+                remove.setAttribute('aria-label', `Remove ${file.name}`);
+                remove.textContent = '×';
+                remove.addEventListener('click', () => {
+                    files.splice(index, 1);
+                    showError(null);
+                    sync();
+                });
+                item.append(img, remove);
+                return item;
+            }));
+            drop.hidden = files.length >= max;
+        };
+
+        const add = (list) => {
+            const problems = [];
+            [...list].forEach((file) => {
+                if (!TYPES.includes(file.type)) problems.push(`${file.name} is not a JPG, PNG or WebP image.`);
+                else if (file.size > MAX_BYTES) problems.push(`${file.name} is larger than 8 MB.`);
+                else if (files.length >= max) problems.push(`You can add up to ${max} photos.`);
+                else files.push(file);
+            });
+            showError([...new Set(problems)].join(' ') || null);
+            sync();
+        };
+
+        input.addEventListener('change', () => {
+            const picked = [...input.files];
+            add(picked.filter((file) => !files.includes(file)));
+        });
+
+        ['dragenter', 'dragover'].forEach((type) => drop.addEventListener(type, (event) => {
+            event.preventDefault();
+            drop.classList.add('is-dragging');
+        }));
+        ['dragleave', 'drop'].forEach((type) => drop.addEventListener(type, () => drop.classList.remove('is-dragging')));
+        drop.addEventListener('drop', (event) => {
+            event.preventDefault();
+            add(event.dataTransfer.files);
+        });
+    });
+};
+
+// Itinerary route maps: load Leaflet only when a map is about to scroll into view.
+const initRouteMaps = () => {
+    const maps = document.querySelectorAll('[data-route-map]');
+    if (!maps.length) return;
+
+    const render = (element) => import('./route-map').then(({ renderRouteMap }) => renderRouteMap(element));
+
+    if (!('IntersectionObserver' in window)) {
+        maps.forEach(render);
+        return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            observer.unobserve(entry.target);
+            render(entry.target);
+        });
+    }, { rootMargin: '400px 0px' });
+
+    maps.forEach((element) => observer.observe(element));
+};
+
+// Tour finder (/tours): apply filters as soon as a box or the sort changes (the form
+// still works with a submit button when JavaScript is off), and fold the filters
+// into a "Filter trips" button on phones.
+// Price slider on /safaris: the bubble and the filled track follow the thumb while dragging;
+// letting go (or using the arrow keys and pausing) reloads the list with the new limit.
+const initPriceFilter = () => {
+    const form = document.querySelector('[data-price-filter]');
+    if (!form) return;
+
+    const input = form.querySelector('input[type="range"]');
+    const range = input.closest('.tm-price-range');
+    const bubble = form.querySelector('[data-price-bubble]');
+    const money = (value) => `${input.dataset.currency}${Number(value).toLocaleString('en-US')}`;
+    const initial = input.value;
+    let timer;
+
+    const update = () => {
+        const pct = ((input.value - input.min) / (input.max - input.min || 1)) * 100;
+        range.style.setProperty('--pct', `${pct}%`);
+        bubble.textContent = money(input.value);
+        input.setAttribute('aria-valuetext', `Up to ${money(input.value)} per person`);
+    };
+
+    const submit = () => {
+        if (input.value === initial) return;
+        // The highest price means "no limit": leave it out of the address.
+        if (input.value === input.max) input.disabled = true;
+        range.classList.add('is-loading');
+        form.submit();
+    };
+
+    input.addEventListener('input', update);
+    input.addEventListener('change', () => {
+        clearTimeout(timer);
+        timer = setTimeout(submit, 350);
+    });
+};
+
+const initTourFinder = () => {
+    const form = document.querySelector('[data-tours-form]');
+    if (!form) return;
+
+    form.addEventListener('change', () => form.requestSubmit());
+
+    const panel = form.querySelector('[data-tours-filters]');
+    const toggle = form.querySelector('[data-tours-filters-toggle]');
+    const phone = window.matchMedia('(max-width: 1023px)');
+
+    const apply = () => panel.classList.toggle('is-collapsible', phone.matches);
+    apply();
+    phone.addEventListener('change', apply);
+
+    toggle.addEventListener('click', () => {
+        const open = !panel.classList.contains('is-open');
+        panel.classList.toggle('is-open', open);
+        toggle.setAttribute('aria-expanded', String(open));
+    });
+};
+
+// Accommodation photo gallery: open a photo full screen, then browse with the arrows,
+// arrow keys or a swipe. Escape (or the close button / a click outside) closes it.
+const initGallery = () => {
+    const gallery = document.querySelector('[data-gallery]');
+    const dialog = document.querySelector('[data-lightbox]');
+    if (!gallery || !dialog) return;
+
+    const items = [...gallery.querySelectorAll('[data-gallery-item]')];
+    const image = dialog.querySelector('[data-lightbox-image]');
+    const count = dialog.querySelector('[data-lightbox-count]');
+    let index = 0;
+
+    const show = (i) => {
+        index = (i + items.length) % items.length;
+        const thumb = items[index].querySelector('img');
+        image.src = items[index].dataset.full || thumb.src;
+        image.alt = thumb.alt;
+        count.textContent = `${index + 1} / ${items.length}`;
+    };
+
+    items.forEach((item, i) => item.addEventListener('click', () => {
+        show(i);
+        dialog.showModal();
+    }));
+
+    dialog.querySelector('[data-lightbox-close]')?.addEventListener('click', () => dialog.close());
+    dialog.querySelector('[data-lightbox-prev]')?.addEventListener('click', () => show(index - 1));
+    dialog.querySelector('[data-lightbox-next]')?.addEventListener('click', () => show(index + 1));
+    dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
+    dialog.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowLeft') show(index - 1);
+        if (event.key === 'ArrowRight') show(index + 1);
+    });
+
+    let startX = null;
+    dialog.addEventListener('touchstart', (event) => { startX = event.touches[0].clientX; }, { passive: true });
+    dialog.addEventListener('touchend', (event) => {
+        if (startX === null || items.length < 2) return;
+        const dx = event.changedTouches[0].clientX - startX;
+        if (Math.abs(dx) > 50) show(index + (dx < 0 ? 1 : -1));
+        startX = null;
+    });
+};
+
 initHeaderScroll();
+initGallery();
+initTourFinder();
+initPriceFilter();
+initRouteMaps();
+initPhotoPickers();
 initMobileMenu();
 initNavDropdowns();
 initMegaPreviews();

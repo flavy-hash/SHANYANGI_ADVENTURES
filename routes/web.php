@@ -22,10 +22,12 @@ Route::post('newsletter', [\App\Http\Controllers\NewsletterController::class, 's
 
 // Content pages (navigation). Filters use the query string, e.g. /safaris?type=honeymoon.
 Route::controller(\App\Http\Controllers\PageController::class)->group(function () {
+    Route::get('tours', 'tours')->name('tours');
     Route::get('safaris', 'safaris')->name('safaris');
     Route::get('safaris/{slug}', 'package')->where('slug', '[a-z0-9-]+')->name('safaris.show');
     Route::get('activities', 'activities')->name('activities');
     Route::get('accommodations', 'accommodations')->name('accommodations');
+    Route::get('accommodations/{slug}', 'accommodation')->where('slug', '[a-z0-9-]+')->name('accommodations.show');
     Route::get('about-us', 'about')->name('about');
     Route::get('reviews', 'reviews')->name('reviews');
     Route::get('contact-us', 'contact')->name('contact');
@@ -58,3 +60,16 @@ Route::controller(\App\Http\Controllers\ChatController::class)->prefix('chat')->
     Route::post('messages', 'send')->middleware('throttle:20,1')->name('send');
     Route::post('typing', 'typing')->middleware('throttle:40,1')->name('typing');
 });
+
+// "Write a review" form on the reviews page (saved unpublished until approved in the admin).
+Route::post('reviews', [\App\Http\Controllers\ReviewController::class, 'store'])
+    ->middleware('throttle:3,1')
+    ->name('reviews.store');
+
+// Legal pages (text edited in the admin: Pages → Legal pages).
+Route::controller(\App\Http\Controllers\LegalPageController::class)->group(function () {
+    Route::get('privacy-policy', 'privacy')->name('legal.privacy');
+    Route::get('terms-and-conditions', 'terms')->name('legal.terms');
+    Route::get('refund-policy', 'refund')->name('legal.refund');
+});
+Route::redirect('terms', 'terms-and-conditions', 301);

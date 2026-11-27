@@ -13,7 +13,7 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Sent to the office (SITE_EMAIL) when a visitor generates an instant quote on a package page.
+ * Sent to the office (BookingEmails::recipients()) when a visitor generates an instant quote on a package page.
  */
 class InstantQuoteCreated extends Mailable
 {

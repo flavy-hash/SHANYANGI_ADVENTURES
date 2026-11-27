@@ -19,6 +19,7 @@ class PageView extends Model
 
     public const PAGE_TYPES = [
         'home' => 'Home',
+        'tours' => 'Tour finder',
         'safaris' => 'Safaris list',
         'package' => 'Tour / package',
         'activities' => 'Activities',
@@ -31,7 +32,7 @@ class PageView extends Model
         'other' => 'Other',
     ];
 
-    protected $fillable = ['visitor_hash', 'path', 'page_type', 'package_id', 'device', 'referrer_host', 'created_at'];
+    protected $fillable = ['visitor_hash', 'path', 'page_type', 'package_id', 'device', 'referrer_host', 'country', 'created_at'];
 
     protected function casts(): array
     {

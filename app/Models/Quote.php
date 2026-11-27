@@ -22,13 +22,14 @@ class Quote extends Model
     protected $fillable = [
         'reference', 'source', 'status', 'package_id', 'trip_request_id',
         'customer_name', 'customer_email', 'customer_phone', 'customer_country',
-        'adults', 'children', 'travel_start', 'travel_end', 'items', 'discount', 'notes', 'valid_until',
+        'adults', 'children', 'travel_start', 'travel_end', 'items', 'discount', 'notes', 'show_bank_details', 'valid_until',
     ];
 
     protected $attributes = [
         'status' => 'draft',
         'source' => 'admin',
         'discount' => 0,
+        'show_bank_details' => true,
     ];
 
     protected function casts(): array
@@ -39,6 +40,7 @@ class Quote extends Model
             'travel_start' => 'date',
             'travel_end' => 'date',
             'valid_until' => 'date',
+            'show_bank_details' => 'boolean',
         ];
     }
 

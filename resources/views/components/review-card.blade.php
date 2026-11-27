@@ -19,7 +19,7 @@
     @if (! empty($review['images']))
         <div class="tm-review-photos">
             @foreach (array_slice($review['images'], 0, 2) as $image)
-                <img src="{{ ProtectedMedia::src($image) }}" alt="" loading="lazy" decoding="async" draggable="false">
+                <img src="{{ ProtectedMedia::src($image, 480) }}" alt="" loading="lazy" decoding="async" draggable="false">
             @endforeach
         </div>
     @endif
@@ -72,7 +72,7 @@
     @if (! empty($review['images']))
         <div class="tm-review-dialog-photos">
             @foreach ($review['images'] as $image)
-                <img src="{{ ProtectedMedia::src($image) }}" alt="" loading="lazy" decoding="async" draggable="false">
+                <img src="{{ ProtectedMedia::src($image, 1200) }}" alt="" loading="lazy" decoding="async" draggable="false">
             @endforeach
         </div>
     @endif

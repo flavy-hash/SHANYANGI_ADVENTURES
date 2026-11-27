@@ -14,6 +14,7 @@ use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Support\Facades\FilamentTimezone;
 use Filament\Support\Icons\Heroicon;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -37,6 +38,10 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->brandName('Shanyangi Adventures')
+            ->brandLogo(asset('images/logo/shanyangi-logo.webp'))
+            ->darkModeBrandLogo(asset('images/logo/shanyangi-logo-light.webp'))
+            ->brandLogoHeight('2.5rem')
+            ->favicon(asset('favicon-32.png'))
             ->colors([
                 'primary' => Color::hex('#395643'),
                 'gray' => Color::Stone,
@@ -48,6 +53,8 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make('Pages'),
             ])
             // Bell icon with in-admin alerts (e.g. a new live chat), checked every 30s.
+            // Itinerary map picker (Packages → Itinerary): script must exist before "Add day" renders one.
+            ->renderHook(PanelsRenderHook::HEAD_END, fn () => view('filament.forms.map-picker-assets'))
             ->databaseNotifications()
             ->databaseNotificationsPolling('30s')
             ->navigationItems([

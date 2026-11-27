@@ -1,6 +1,8 @@
 // Google Translate: loads Google's widget into a hidden container and drives it from
 // our own language menus ([data-lang] buttons). The choice persists across pages via
-// Google's "googtrans" cookie, which the widget reads on every page load.
+// Google's "googtrans" cookie, which the widget reads when it loads.
+// Google's scripts are only downloaded when a visitor picks a language (or picked
+// one earlier), so English visitors don't pay for them.
 
 const mount = document.querySelector('[data-google-translate]');
 
@@ -66,7 +68,20 @@ const setLanguage = (lang) => {
 
     writeCookie(`/${sourceLang}/${lang}`, 365);
     syncMenus(lang);
+    loadWidget();
     selectInWidget(lang);
+};
+
+let widgetRequested = false;
+
+const loadWidget = () => {
+    if (widgetRequested) return;
+    widgetRequested = true;
+
+    const script = document.createElement('script');
+    script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+    script.async = true;
+    document.head.appendChild(script);
 };
 
 if (mount) {
@@ -91,8 +106,11 @@ if (mount) {
         );
     };
 
-    const script = document.createElement('script');
-    script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
-    script.async = true;
-    document.head.appendChild(script);
+    // A language chosen on an earlier page: translate this one too.
+    if (currentLang() !== sourceLang) loadWidget();
+
+    // Warm up when someone opens the language menu, so switching feels instant.
+    document.querySelectorAll('[data-lang]').forEach((button) => {
+        button.closest('details')?.addEventListener('toggle', loadWidget, { once: true });
+    });
 }

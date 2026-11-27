@@ -155,7 +155,7 @@ class WriteReviewTest extends TestCase
             $review->update(['is_published' => true]);
             $this->get(route('reviews'))
                 ->assertOk()
-                ->assertSee('/media/image/'.$path, false); // signed, protected URL
+                ->assertSee('/media/image/_v/480/'.$path.'.', false); // signed, protected, resized
         } finally {
             Storage::disk('media')->delete($path);
         }

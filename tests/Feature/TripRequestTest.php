@@ -69,17 +69,17 @@ class TripRequestTest extends TestCase
     public function test_office_is_emailed_when_site_email_is_set(): void
     {
         Mail::fake();
-        config(['site.email' => 'office@example.com']);
+        config(['site.bookings_email' => null, 'site.email' => 'office@example.com']); // SITE_EMAIL is the last fallback
 
         $this->post('/contact-us', $this->validData());
 
         Mail::assertSent(TripRequestReceived::class, fn ($mail) => $mail->hasTo('office@example.com') && $mail->hasReplyTo('jane@example.com'));
     }
 
-    public function test_no_email_is_attempted_without_site_email(): void
+    public function test_no_email_is_attempted_without_any_booking_email(): void
     {
         Mail::fake();
-        config(['site.email' => null]);
+        config(['site.bookings_email' => null, 'site.email' => null]);
 
         $this->post('/contact-us', $this->validData());
 

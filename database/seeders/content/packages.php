@@ -9,6 +9,7 @@ return [
         'featured' => true,
         'types' => ['migration'],
         'category' => 'Safari',
+        'style' => 'classic',
         'tagline' => 'The classic northern circuit',
         'title' => 'Serengeti & Ngorongoro Safari',
         'chips' => [
@@ -25,6 +26,7 @@ return [
         'featured' => true,
         'types' => ['kilimanjaro'],
         'category' => 'Kilimanjaro',
+        'style' => 'classic',
         'tagline' => 'The classic whiskey route',
         'title' => 'Machame Route',
         'chips' => [
@@ -41,6 +43,7 @@ return [
         'featured' => true,
         'types' => ['zanzibar'],
         'category' => 'Zanzibar',
+        'style' => 'mid-range',
         'tagline' => 'Stone Town & shores',
         'title' => 'Zanzibar Beach Escape',
         'chips' => [
@@ -56,6 +59,7 @@ return [
         'slug' => 'safari-and-sea-honeymoon',
         'types' => ['honeymoon', 'luxury', 'zanzibar'],
         'category' => 'Honeymoon',
+        'style' => 'luxury',
         'tagline' => 'Savannah sunsets, island nights',
         'title' => 'Safari & Sea Honeymoon',
         'chips' => [
@@ -71,6 +75,7 @@ return [
         'slug' => 'family-safari-adventure',
         'types' => ['family'],
         'category' => 'Family',
+        'style' => 'mid-range',
         'tagline' => 'Shorter drives, bigger smiles',
         'title' => 'Family Safari Adventure',
         'chips' => [
@@ -86,6 +91,7 @@ return [
         'slug' => 'fly-in-serengeti-luxury',
         'types' => ['luxury'],
         'category' => 'Luxury',
+        'style' => 'luxury',
         'tagline' => 'Skip the long roads',
         'title' => 'Fly-in Serengeti Luxury',
         'chips' => [
@@ -101,6 +107,7 @@ return [
         'slug' => 'great-migration-river-crossings',
         'types' => ['migration'],
         'category' => 'Migration',
+        'style' => 'mid-range',
         'tagline' => 'Front row at the Mara River',
         'title' => 'Great Migration River Crossings',
         'chips' => [
@@ -116,6 +123,7 @@ return [
         'slug' => 'lemosho-route',
         'types' => ['kilimanjaro'],
         'category' => 'Kilimanjaro',
+        'style' => 'mid-range',
         'tagline' => 'The scenic western approach',
         'title' => 'Lemosho Route',
         'chips' => [

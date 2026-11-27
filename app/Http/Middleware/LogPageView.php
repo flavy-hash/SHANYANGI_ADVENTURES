@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\PageView;
+use App\Support\GeoIp;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -13,7 +14,8 @@ use Throwable;
  * Records anonymous page views for the admin's Visitor activity log.
  *
  * Privacy by design (see config/analytics.php):
- * - no cookies; no IP address or full user agent is stored;
+ * - no cookies; no IP address or full user agent is stored (the IP is only
+ *   used in memory to look up the country, see App\Support\GeoIp);
  * - the visitor ID is a hash of IP + browser + today's date + the app key,
  *   so it changes every day and can't be reversed or used across days;
  * - "Do Not Track" / "Global Privacy Control" browsers, logged-in staff,
@@ -28,6 +30,7 @@ class LogPageView
      */
     protected const PAGE_TYPES = [
         'home' => 'home',
+        'tours' => 'tours',
         'safaris' => 'safaris',
         'safaris.show' => 'package',
         'activities' => 'activities',
@@ -63,6 +66,7 @@ class LogPageView
                 'package_id' => $request->attributes->get('viewed_package_id'),
                 'device' => $this->device($userAgent),
                 'referrer_host' => $this->referrerHost($request),
+                'country' => GeoIp::country($request),
             ]);
         } catch (Throwable $e) {
             // Analytics must never break the website.

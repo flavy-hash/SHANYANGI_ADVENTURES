@@ -43,6 +43,8 @@
                         @endforeach
                     </div>
 
+                    <x-route-map :package="$package" />
+
                     {{-- Day-by-day itinerary --}}
                     @if ($days)
                         <h3 class="tm-package-subheading">Day-by-Day Itinerary</h3>
@@ -56,7 +58,7 @@
                                     </summary>
 
                                     <div class="tm-day-body">
-                                        @if ($src = ProtectedMedia::src($day['image'] ?? null))
+                                        @if ($src = ProtectedMedia::src($day['image'] ?? null, 1200))
                                             <figure class="tm-day-photo" data-protected-media>
                                                 <img src="{{ $src }}" alt="" loading="lazy" decoding="async" draggable="false">
                                                 @if (filled($day['caption'] ?? null))
@@ -77,7 +79,7 @@
                                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3Z"/></svg>
                                                     Activity • {{ $day['activity']['title'] }}
                                                 </p>
-                                                @if ($activitySrc = ProtectedMedia::src($day['activity']['image'] ?? null))
+                                                @if ($activitySrc = ProtectedMedia::src($day['activity']['image'] ?? null, 800))
                                                     <div class="tm-day-activity-photo" data-protected-media>
                                                         <img src="{{ $activitySrc }}" alt="" loading="lazy" decoding="async" draggable="false">
                                                     </div>
@@ -88,10 +90,12 @@
                                             </div>
                                         @endif
 
+                                        @php($dayStay = $stayLinks->forDay($day))
+                                        @php($areaLink = $dayStay ? null : $stayLinks->forArea($day))
                                         <div class="tm-day-meta">
                                             <p class="tm-day-stay">
                                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6M3 14h18M3 18v2M21 18v2M7 10V7a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v3"/></svg>
-                                                Day {{ $i + 1 }}@if (filled($day['stay'] ?? null)) <span aria-hidden="true">|</span> Accommodation, {{ $day['stay'] }}@endif
+                                                Day {{ $i + 1 }}@if (filled($day['stay'] ?? null)) <span aria-hidden="true">|</span> Accommodation, @if ($dayStay)<a href="{{ $dayStay->url }}" class="tm-stay-link">{{ $day['stay'] }}</a>@elseif ($areaLink)<a href="{{ $areaLink['url'] }}" class="tm-stay-link" title="{{ $areaLink['label'] }}">{{ $day['stay'] }}</a>@else{{ $day['stay'] }}@endif @endif
                                             </p>
                                             @if (filled($day['meals'] ?? null))
                                                 <p class="tm-day-meals">
@@ -107,23 +111,39 @@
                                                     <p class="tm-day-options-title">Options based on your package:</p>
                                                     <ul>
                                                         @foreach ($day['options'] as $option)
+                                                            @php($optionStay = $stayLinks->forOption($option))
                                                             <li>
                                                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>
                                                                 <span>
                                                                     <strong>{{ $option['level'] }}</strong>
-                                                                    <small>{{ $option['name'] }}</small>
+                                                                    @if ($optionStay)
+                                                                        <a href="{{ $optionStay->url }}" class="tm-stay-link">
+                                                                            {{ $option['name'] }}
+                                                                            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.64L10.2 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.19-3.96H3.75A.75.75 0 0 1 3 10Z" clip-rule="evenodd"/></svg>
+                                                                        </a>
+                                                                    @else
+                                                                        <small>{{ $option['name'] }}</small>
+                                                                    @endif
                                                                 </span>
                                                             </li>
                                                         @endforeach
                                                     </ul>
                                                 </div>
-                                                @if ($staySrc = ProtectedMedia::src($day['stay_image'] ?? null))
-                                                    <figure class="tm-day-photo tm-day-stay-photo" data-protected-media>
-                                                        <img src="{{ $staySrc }}" alt="" loading="lazy" decoding="async" draggable="false">
-                                                        @if (filled($day['stay_caption'] ?? null))
-                                                            <figcaption>{{ $day['stay_caption'] }}</figcaption>
-                                                        @endif
-                                                    </figure>
+                                                @if ($staySrc = ProtectedMedia::src($day['stay_image'] ?? null, 800))
+                                                    @if ($dayStay)
+                                                        <a href="{{ $dayStay->url }}" class="tm-day-photo tm-day-stay-photo is-link" data-protected-media aria-label="View {{ $dayStay->name }}">
+                                                            <img src="{{ $staySrc }}" alt="" loading="lazy" decoding="async" draggable="false">
+                                                            <span class="tm-day-photo-caption">{{ filled($day['stay_caption'] ?? null) ? $day['stay_caption'] : $dayStay->name }}</span>
+                                                            <span class="tm-day-photo-cta">View stay &amp; photos</span>
+                                                        </a>
+                                                    @else
+                                                        <figure class="tm-day-photo tm-day-stay-photo" data-protected-media>
+                                                            <img src="{{ $staySrc }}" alt="" loading="lazy" decoding="async" draggable="false">
+                                                            @if (filled($day['stay_caption'] ?? null))
+                                                                <figcaption>{{ $day['stay_caption'] }}</figcaption>
+                                                            @endif
+                                                        </figure>
+                                                    @endif
                                                 @endif
                                             </div>
                                         @endif
@@ -131,6 +151,24 @@
                                 </details>
                             @endforeach
                         </div>
+                    @endif
+
+                    {{-- Optional activities (extras at their own cost) --}}
+                    @php($optionalActivities = array_values(array_filter($package->optional_activities ?? [], fn ($a) => filled($a['name'] ?? null))))
+                    @if ($optionalActivities)
+                        <h3 class="tm-package-subheading">Optional Activities</h3>
+                        <p class="tm-optional-intro">Add any of these to your trip. They are not included in the package price.</p>
+                        <ul class="tm-optional">
+                            @foreach ($optionalActivities as $activity)
+                                <li>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+                                    <span class="tm-optional-name">{{ $activity['name'] }}</span>
+                                    @if (filled($activity['price'] ?? null))
+                                        <span class="tm-optional-price">{{ $activity['price'] }}</span>
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
                     @endif
                 </div>
 
@@ -144,6 +182,24 @@
                         <p class="tm-booking-from">Price</p>
                         <p class="tm-booking-price tm-booking-price-sm">On request</p>
                         <p class="tm-booking-note">tailored to your group size, dates and comfort level</p>
+                    @endif
+
+                    {{-- Price per person by group size, and the child price --}}
+                    @if (! empty($package->price_tiers) || $package->child_price)
+                        <dl class="tm-booking-facts" aria-label="Price per person by group size">
+                            @foreach ($package->price_tiers ?? [] as $tier)
+                                <div>
+                                    <dt>{{ $tier['people'] }} {{ $tier['people'] === 1 ? 'person' : 'people' }}</dt>
+                                    <dd>{{ $currency }}{{ number_format($tier['price']) }} per person</dd>
+                                </div>
+                            @endforeach
+                            @if ($package->child_price)
+                                <div>
+                                    <dt>Children</dt>
+                                    <dd>{{ $currency }}{{ number_format($package->child_price) }} per child</dd>
+                                </div>
+                            @endif
+                        </dl>
                     @endif
 
                     @if (! empty($package['facts']))
@@ -227,7 +283,7 @@
                     </div>
 
                     <button type="submit" class="tm-btn-primary tm-form-submit">Create My Quote</button>
-                    <p class="tm-quote-small">Based on {{ $currency }}{{ number_format($package['price']) }} per person. Your details are only used to prepare and follow up this quote.</p>
+                    <p class="tm-quote-small">@if (! empty($package->price_tiers))Priced per person for your group size, from {{ $currency }}{{ number_format($package['price']) }}.@else Based on {{ $currency }}{{ number_format($package['price']) }} per person.@endif Your details are only used to prepare and follow up this quote.</p>
                 </form>
             @endif
         </dialog>

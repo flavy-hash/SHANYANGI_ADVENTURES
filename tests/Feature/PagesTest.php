@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Accommodation;
 use App\Models\Activity;
 use App\Models\BlogPost;
 use App\Models\Package;
@@ -19,6 +20,18 @@ class PagesTest extends TestCase
 
         // Starter content (images stay as remote URLs in tests: SEED_DOWNLOAD_IMAGES=false).
         $this->seed(ContentSeeder::class);
+    }
+
+    public function test_floating_whatsapp_button_uses_the_site_number(): void
+    {
+        config(['site.whatsapp' => '+255 787 156 775']);
+        $this->get('/safaris')
+            ->assertOk()
+            ->assertSee('class="tm-whatsapp-float"', false)
+            ->assertSee('https://wa.me/255787156775?text=', false);
+
+        config(['site.whatsapp' => null]);
+        $this->get('/safaris')->assertOk()->assertDontSee('class="tm-whatsapp-float"', false);
     }
 
     public function test_every_navigation_page_loads(): void
@@ -52,7 +65,7 @@ class PagesTest extends TestCase
         $html = $this->get('/activities?location=zanzibar')->assertOk()->assertSee('Snorkelling Excursion')->getContent();
         $this->assertSame($zanzibar, substr_count($html, 'class="tm-info-card"'));
 
-        $karatu = collect(config('accommodations.items'))->where('location', 'karatu')->count();
+        $karatu = Accommodation::where('location', 'Karatu')->count();
         $html = $this->get('/accommodations?location=karatu')->assertOk()->assertSee('Karatu Coffee Farm Lodge')->getContent();
         $this->assertSame($karatu, substr_count($html, 'class="tm-info-card"'));
         $this->assertStringNotContainsString('Zanzibar Beachfront Resort', $html);
@@ -155,5 +168,32 @@ Second paragraph.",
     public function test_current_page_is_highlighted_in_the_menu(): void
     {
         $this->get('/activities')->assertSee('tm-nav-active', false);
+    }
+
+    public function test_banners_and_balloon_card_use_the_company_photos(): void
+    {
+        foreach (['activities-balloon.webp', 'accommodation-mountain-lounge.webp', 'hot-air-balloon-card.webp', 'home-balloon-zebras.webp'] as $photo) {
+            $this->assertFileExists(\App\Support\ProtectedMedia::root('images/site/'.$photo));
+        }
+
+        // Served through signed protected-media links, cropped around the balloon / the mountain view.
+        $this->get(route('activities'))
+            ->assertOk()
+            ->assertSee('site/activities-balloon', false)
+            ->assertSee('object-position: center 18%', false)
+            ->assertSee('site/hot-air-balloon-card', false); // the Hot Air Balloon Safari card
+
+        $this->get(route('accommodations'))
+            ->assertOk()
+            ->assertSee('site/accommodation-mountain-lounge', false)
+            ->assertSee('object-position: center 40%', false);
+
+        // Home page "Top Activities": the balloon card uses the balloon-over-zebras photo.
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('site/home-balloon-zebras', false)
+            ->assertSee('object-position: center 22%', false);
+
+        $this->assertSame('site/hot-air-balloon-card.webp', Activity::where('title', 'Hot Air Balloon Safari')->value('image'));
     }
 }

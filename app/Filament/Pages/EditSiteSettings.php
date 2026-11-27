@@ -4,10 +4,12 @@ namespace App\Filament\Pages;
 
 use App\Models\SiteSetting;
 use App\Support\BankDetails;
+use App\Support\BookingEmails;
 use App\Support\SocialLinks;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -19,6 +21,8 @@ use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Facades\Mail;
+use Throwable;
 use UnitEnum;
 
 /**
@@ -50,6 +54,7 @@ class EditSiteSettings extends Page
 
         $this->form->fill([
             'social' => SocialLinks::urls(),
+            'booking' => ['emails' => BookingEmails::saved()],
             'bank' => [
                 'accounts' => array_values((array) ($bank['accounts'] ?? [])),
                 'note' => $bank['note'] ?? 'Please use the quotation reference as the payment reference. International transfer charges are paid by the sender.',
@@ -71,6 +76,25 @@ class EditSiteSettings extends Page
         return $schema
             ->statePath('data')
             ->components([
+                Section::make('Booking emails')
+                    ->description('Every new trip request and instant quote is emailed to these addresses, as well as appearing in the admin. Press Enter after each address.')
+                    ->icon(Heroicon::OutlinedEnvelope)
+                    ->statePath('booking')
+                    ->schema([
+                        TagsInput::make('emails')
+                            ->hiddenLabel()
+                            ->placeholder('e.g. info@shanyangiadventures.co.tz')
+                            ->nestedRecursiveRules(['email:rfc'])
+                            ->splitKeys([',', ' '])
+                            ->helperText(fn () => BookingEmails::saved() ? null : 'Not set yet: emails currently go to '.(implode(', ', BookingEmails::recipients()) ?: 'nobody').' (from .env).'),
+                        Actions::make([
+                            Action::make('testEmail')
+                                ->label('Send test email')
+                                ->icon(Heroicon::OutlinedPaperAirplane)
+                                ->color('gray')
+                                ->action(fn () => $this->sendTestEmail()),
+                        ]),
+                    ]),
                 Section::make('Social media')
                     ->description('Your official accounts. Icons appear in the website footer, the contact page and the mobile menu. Leave a field empty to hide that network.')
                     ->statePath('social')
@@ -129,11 +153,44 @@ class EditSiteSettings extends Page
         $social = array_map(fn ($url) => $url ?: null, $state['social'] ?? []);
 
         SiteSetting::put(SocialLinks::KEY, $social);
+        SiteSetting::put(BookingEmails::KEY, [
+            'emails' => array_values(array_unique(array_map(fn ($email) => strtolower(trim($email)), $state['booking']['emails'] ?? []))),
+        ]);
         SiteSetting::put(BankDetails::KEY, [
             'accounts' => array_values($state['bank']['accounts'] ?? []),
             'note' => $state['bank']['note'] ?? null,
         ]);
 
         Notification::make()->title('Site settings saved')->success()->send();
+    }
+
+    /** Checks the mail settings by sending a short email to the saved booking addresses. */
+    public function sendTestEmail(): void
+    {
+        if (! $to = BookingEmails::recipients()) {
+            Notification::make()->title('Add a booking email first')->body('Type an address, press Enter, then Save changes.')->warning()->send();
+
+            return;
+        }
+
+        try {
+            Mail::raw(
+                "This is a test from the ".config('app.name')." website.
+
+New bookings (trip requests and instant quotes) will be emailed to this address.",
+                fn ($message) => $message->to($to)->subject('Test: booking emails are working'),
+            );
+        } catch (Throwable $e) {
+            Notification::make()
+                ->title('Email could not be sent')
+                ->body('Check the MAIL_ settings in .env. Error: '.str($e->getMessage())->limit(200))
+                ->danger()
+                ->persistent()
+                ->send();
+
+            return;
+        }
+
+        Notification::make()->title('Test email sent')->body('Sent to '.implode(', ', $to).'. Check the inbox (and the spam folder).')->success()->send();
     }
 }
