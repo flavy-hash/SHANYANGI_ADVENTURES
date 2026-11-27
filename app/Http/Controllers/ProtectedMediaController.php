@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\ImageVariants;
 use App\Support\ProtectedMedia;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -20,11 +21,27 @@ class ProtectedMediaController extends Controller
     {
         $this->guard($request);
 
-        $file = $this->resolve('images', $path);
+        $file = ImageVariants::isVariant($path) ? $this->variant($path) : $this->resolve('images', $path);
 
-        return response()->file($file, $this->cacheHeaders() + [
+        return response()->file($file, $this->cacheHeaders($request) + [
             'Content-Disposition' => 'inline',
         ]);
+    }
+
+    /**
+     * A resized copy of an image, created the first time it's asked for.
+     */
+    protected function variant(string $path): string
+    {
+        $parsed = ImageVariants::parse($path);
+        abort_unless($parsed, 404);
+        [$width, $originalPath, $format] = $parsed;
+
+        $original = $this->resolve('images', $originalPath); // also rejects path traversal
+        $target = ProtectedMedia::root('images/'.$path);
+
+        // If resizing fails for any reason, fall back to the original image.
+        return ImageVariants::make($original, $target, $width, $format) ? $target : $original;
     }
 
     public function playlist(Request $request, string $stream): Response
@@ -58,7 +75,7 @@ class ProtectedMediaController extends Controller
     {
         $this->guard($request);
 
-        return response()->file($this->resolve("streams/{$stream}", $segment), $this->cacheHeaders() + [
+        return response()->file($this->resolve("streams/{$stream}", $segment), $this->cacheHeaders($request) + [
             'Content-Type' => 'video/mp2t',
         ]);
     }
@@ -96,13 +113,18 @@ class ProtectedMediaController extends Controller
         return $file;
     }
 
-    protected function cacheHeaders(): array
+    protected function cacheHeaders(Request $request): array
     {
+        // Cache in the browser until the signed URL expires; the URL stays the same on
+        // every page of the visit, so each image is downloaded once.
+        $maxAge = max(60, (int) $request->query('expires') - time());
+
         return [
-            'Cache-Control' => 'private, max-age=3600',
+            'Cache-Control' => 'private, max-age='.$maxAge,
             // Without this, "open image in new tab" is answered from the browser cache
-            // and never reaches the Sec-Fetch-Dest check in guard().
-            'Vary' => 'Sec-Fetch-Dest, Sec-Fetch-Site, Cookie',
+            // and never reaches the Sec-Fetch-Dest check in guard(). (Not "Cookie": the
+            // XSRF cookie changes on every page, which made browsers re-download images.)
+            'Vary' => 'Sec-Fetch-Dest, Sec-Fetch-Site',
             'X-Content-Type-Options' => 'nosniff',
         ];
     }
