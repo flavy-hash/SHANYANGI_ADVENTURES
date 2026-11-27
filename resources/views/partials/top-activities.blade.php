@@ -2,6 +2,7 @@
 
 @php
     // image: full URL, or a file under storage/app/private/media/images (served via ProtectedMedia).
+    // focus (optional): which part of the photo to keep when cropped (CSS object-position).
     $activities = [
         [
             'label' => '06:10 EAT',
@@ -22,7 +23,8 @@
             'title' => 'Hot air balloon safaris',
             'text' => 'Float over the Serengeti at dawn and watch the plains wake up from above, then land for a celebratory bush breakfast.',
             'caption' => 'Balloon Launch · Seronera',
-            'image' => 'https://images.unsplash.com/photo-1507608616759-54f48f0af0ee?auto=format&fit=crop&w=1000&q=75',
+            'image' => 'site/home-balloon-zebras.webp',
+            'focus' => 'center 22%', // tall photo: keep the balloon and the horizon in the wide card
         ],
         [
             'label' => 'After the plains',
@@ -56,7 +58,7 @@
 
                     <figure class="tm-activity-media" data-protected-media>
                         @if ($src = $imageUrl($activity['image'] ?? null))
-                            <img src="{{ $src }}" alt="" loading="lazy" decoding="async" draggable="false">
+                            <img src="{{ $src }}" alt="" loading="lazy" decoding="async" draggable="false" @if (! empty($activity['focus'])) style="object-position: {{ $activity['focus'] }}" @endif>
                         @endif
                         <figcaption class="tm-activity-caption">{{ $activity['caption'] }}</figcaption>
                     </figure>

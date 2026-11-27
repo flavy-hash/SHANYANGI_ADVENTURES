@@ -7,6 +7,7 @@
     'badge' => null,  // outlined pill above the title, e.g. "Safari"
     'location' => null,
     'align' => 'center',
+    'focus' => null,  // which part of the photo to keep when cropped, e.g. "center 30%" (CSS object-position)
 ])
 
 @use('App\Support\ProtectedMedia')
@@ -16,7 +17,8 @@
 {{-- Inner-page banner: photo, dark gradient, centred title. The transparent header sits on top of it. --}}
 <section @class(['tm-page-hero', 'is-left' => $align === 'left']) data-protected-media>
     @if ($src)
-        <img src="{{ $src }}" alt="" class="tm-page-hero-img" fetchpriority="high" decoding="async" draggable="false">
+        <img src="{{ $src }}" alt="" class="tm-page-hero-img" fetchpriority="high" decoding="async" draggable="false"
+             @if ($focus) style="object-position: {{ $focus }}" @endif>
     @endif
 
     <div class="tm-page-hero-inner tm-container">

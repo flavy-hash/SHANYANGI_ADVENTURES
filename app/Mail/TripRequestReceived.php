@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Sent to the office (SITE_EMAIL) when a visitor submits the trip request form.
+ * Sent to the office (BookingEmails::recipients()) when a visitor submits the trip request form.
  */
 class TripRequestReceived extends Mailable
 {

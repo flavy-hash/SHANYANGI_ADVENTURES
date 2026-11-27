@@ -30,7 +30,7 @@ return [
         'location' => 'serengeti',
         'duration' => 'Sunrise',
         'text' => 'Float over the Serengeti at dawn as the plains wake up below, then land for a celebratory bush breakfast.',
-        'image' => 'https://images.unsplash.com/photo-1507608616759-54f48f0af0ee?auto=format&fit=crop&w=900&q=75',
+        'image' => 'site/hot-air-balloon-card.webp', // storage/app/private/media/images/site/
     ],
     [
         'title' => 'Sunset Bush Dinner',

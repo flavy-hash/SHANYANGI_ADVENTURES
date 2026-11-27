@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Pages\EditSiteSettings;
 use App\Filament\Resources\Quotes\Pages\CreateQuote;
 use App\Filament\Resources\Quotes\Pages\EditQuote;
 use App\Filament\Resources\Quotes\Pages\ListQuotes;
@@ -9,8 +10,10 @@ use App\Mail\InstantQuoteCreated;
 use App\Mail\QuoteMail;
 use App\Models\Package;
 use App\Models\Quote;
+use App\Models\SiteSetting;
 use App\Models\TripRequest;
 use App\Models\User;
+use App\Support\BankDetails;
 use App\Support\QuotePdf;
 use Database\Seeders\ContentSeeder;
 use Filament\Forms\Components\Repeater;
@@ -33,7 +36,7 @@ class QuoteTest extends TestCase
 
     protected function pricedPackage(): Package
     {
-        return Package::query()->published()->where('price', '>', 0)->firstOrFail();
+        return Package::query()->published()->where('price', '>', 0)->whereNull('price_tiers')->firstOrFail();
     }
 
     protected function visitorForm(array $overrides = []): array
@@ -68,6 +71,64 @@ class QuoteTest extends TestCase
         $this->assertSame(3241.0, $quote->subtotal);
         $this->assertSame(3141.0, $quote->total);
         $this->assertSame('$3,141.00', Quote::money($quote->total));
+    }
+
+    public function test_bank_details_are_managed_in_site_settings_and_printed_on_quotes(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        Repeater::fake();
+        Livewire::test(EditSiteSettings::class)
+            ->fillForm(['bank' => [
+                'accounts' => [
+                    ['bank_name' => 'CRDB Bank PLC', 'account_name' => 'Shanyangi Adventures Ltd', 'account_number' => '0150123456789', 'branch' => 'Arusha', 'swift' => 'CORUTZTZ', 'currency' => 'USD'],
+                    ['bank_name' => 'NMB Bank', 'account_name' => 'Shanyangi Adventures Ltd', 'account_number' => '40110012345', 'branch' => '', 'swift' => '', 'currency' => 'TZS'],
+                ],
+                'note' => 'Bank charges are paid by the sender.',
+            ]])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame(['CRDB Bank PLC', 'NMB Bank'], array_column(BankDetails::accounts(), 'bank_name'));
+
+        $quote = Quote::create(['customer_name' => 'Jane', 'customer_email' => 'jane@example.com', 'adults' => 2, 'children' => 0, 'items' => []]);
+        $html = view('pdf.quote', ['quote' => $quote])->render();
+        $this->assertStringContainsString('Payment details', $html);
+        $this->assertStringContainsString('0150123456789', $html);
+        $this->assertStringContainsString('CORUTZTZ', $html);
+        $this->assertStringContainsString('40110012345', $html);
+        $this->assertStringContainsString('Bank charges are paid by the sender.', $html);
+        $this->assertStringContainsString('Payment reference: <strong>'.$quote->reference, $html);
+        $this->assertStringStartsWith('%PDF', QuotePdf::output($quote));
+
+        // Switched off for one quote.
+        $quote->update(['show_bank_details' => false]);
+        $this->assertStringNotContainsString('Payment details', view('pdf.quote', ['quote' => $quote->fresh()])->render());
+    }
+
+    public function test_no_payment_box_until_an_account_is_complete(): void
+    {
+        SiteSetting::put(BankDetails::KEY, ['accounts' => [['bank_name' => 'CRDB Bank PLC', 'account_number' => '']]]);
+        $quote = Quote::create(['customer_name' => 'Jane', 'customer_email' => 'jane@example.com', 'adults' => 2, 'children' => 0, 'items' => []]);
+
+        $this->assertFalse(BankDetails::isConfigured());
+        $this->assertTrue($quote->fresh()->show_bank_details); // on by default
+        $this->assertStringNotContainsString('Payment details', view('pdf.quote', ['quote' => $quote])->render());
+    }
+
+    public function test_quote_form_has_the_bank_details_switch(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        $this->get(CreateQuote::getUrl())->assertOk()->assertSee('Show bank details on the PDF')->assertSee('No bank accounts yet');
+
+        $quote = Quote::create(['customer_name' => 'Jane', 'customer_email' => 'jane@example.com', 'adults' => 2, 'children' => 0, 'items' => [['description' => 'Safari', 'quantity' => 1, 'unit_price' => 100]]]);
+        Livewire::test(EditQuote::class, ['record' => $quote->getRouteKey()])
+            ->fillForm(['show_bank_details' => false])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertFalse($quote->fresh()->show_bank_details);
     }
 
     public function test_pdf_contains_the_quote_details(): void
@@ -111,7 +172,7 @@ class QuoteTest extends TestCase
     public function test_visitor_gets_a_quote_and_a_signed_download_link(): void
     {
         Mail::fake();
-        config(['site.email' => 'office@example.com']);
+        config(['site.bookings_email' => 'office@example.com']);
         $admin = User::factory()->create();
         $package = $this->pricedPackage();
 

@@ -9,7 +9,7 @@
 
 <article class="tm-package-card">
     <div class="tm-package-media">
-        @if ($src = ProtectedMedia::src($package['image'] ?? null))
+        @if ($src = ProtectedMedia::src($package['image'] ?? null, 800))
             <img src="{{ $src }}" alt="" loading="lazy" decoding="async" draggable="false">
         @endif
         <span class="tm-package-category">{{ $package['category'] }}</span>

@@ -1,5 +1,5 @@
 @php
-    $explore = collect(config('navigation.primary', []))
+    $explore = collect(\App\Support\Navigation::primary())
         ->reject(fn ($item) => ($item['path'] ?? '/') === '/' || in_array($item['label'], ['About Us', 'Contacts'], true))
         ->map(fn ($item) => ['label' => $item['label'], 'path' => $item['path']]);
 
@@ -107,11 +107,19 @@
             </div>
         @endif
 
+        @if ($cards = config('site.payment_cards'))
+            <div class="tm-footer-payments">
+                <h3 class="tm-footer-heading">We Accept</h3>
+                <img src="{{ asset($cards['image']) }}" alt="{{ $cards['label'] }}" width="600" height="81" loading="lazy" decoding="async" draggable="false">
+            </div>
+        @endif
+
         <div class="tm-footer-bottom">
             <p>&copy; {{ now()->year }} <span class="notranslate" translate="no">Shanyangi Adventures</span>. All rights reserved.</p>
             <ul>
-                <li><a href="{{ url('/privacy-policy') }}">Privacy Policy</a></li>
-                <li><a href="{{ url('/terms') }}">Terms &amp; Conditions</a></li>
+                <li><a href="{{ route('legal.privacy') }}">Privacy Policy</a></li>
+                <li><a href="{{ route('legal.terms') }}">Terms &amp; Conditions</a></li>
+                <li><a href="{{ route('legal.refund') }}">Refund Policy</a></li>
             </ul>
         </div>
     </div>

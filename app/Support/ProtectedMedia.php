@@ -24,24 +24,29 @@ class ProtectedMedia
      * Image source for content config: full URLs pass through, anything else is
      * treated as a protected image under media/images.
      */
-    public static function src(?string $image): ?string
+    public static function src(?string $image, int $width = 1600): ?string
     {
         if ($image === null || $image === '') {
             return null;
         }
 
-        return str_starts_with($image, 'http') ? $image : self::imageUrl($image);
+        return str_starts_with($image, 'http') ? $image : self::imageUrl($image, $width);
     }
 
     /**
      * Signed URL for an image under media/images, or null when the file is missing.
+     * Photos are served as a resized copy (ImageVariants) close to $width pixels wide.
      */
-    public static function imageUrl(?string $path): ?string
+    public static function imageUrl(?string $path, ?int $width = 1600): ?string
     {
         $path = trim((string) $path, '/');
 
         if ($path === '' || ! is_file(self::root('images/'.$path))) {
             return null;
+        }
+
+        if ($width && preg_match('/\.(jpe?g|png|webp)$/i', $path)) {
+            $path = ImageVariants::path($path, $width);
         }
 
         return self::sign('media.image', ['path' => $path]);

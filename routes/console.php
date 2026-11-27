@@ -11,3 +11,6 @@ Artisan::command('inspire', function () {
 // Delete visitor activity older than config('analytics.retention_days').
 // Needs the scheduler running on the server: * * * * * php artisan schedule:run
 Schedule::command('model:prune', ['--model' => [\App\Models\PageView::class]])->daily();
+
+// Refresh the free IP-to-country database behind the "Country" column (DB-IP publishes monthly).
+Schedule::command('analytics:update-geoip')->monthlyOn(3, '04:00');

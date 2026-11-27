@@ -23,6 +23,10 @@ return [
     // Footer contact details (each line is hidden until set).
     'email' => env('SITE_EMAIL'),
 
+    // Where new bookings are emailed (comma-separate several). The admin setting under
+    // Pages → Site settings → Booking emails takes priority; SITE_EMAIL is the last fallback.
+    'bookings_email' => env('BOOKINGS_EMAIL'),
+
     'address' => env('SITE_ADDRESS'),
 
     // Office time zone: times shown in the admin (stored as UTC).

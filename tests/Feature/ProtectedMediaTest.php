@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Support\ImageVariants;
 use App\Support\ProtectedMedia;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -67,6 +68,29 @@ class ProtectedMediaTest extends TestCase
         $this->assertStringContainsString('Sec-Fetch-Dest', $response->headers->get('Vary'));
     }
 
+    public function test_images_are_served_as_smaller_cached_copies(): void
+    {
+        $photo = imagecreatetruecolor(1600, 1000);
+        imagejpeg($photo, "{$this->root}/images/safari.jpg", 90);
+        imagedestroy($photo);
+
+        $url = ProtectedMedia::imageUrl('safari.jpg', 800);
+        $this->assertStringContainsString('/media/image/_v/800/safari.jpg.', $url);
+
+        $response = $this->fetch($url)->assertOk();
+        $variant = "{$this->root}/images/".ImageVariants::path('safari.jpg', 800);
+        $this->assertFileExists($variant);
+        $this->assertSame(800, getimagesize($variant)[0]);
+
+        // Cached for the life of the signed URL, without varying on the ever-changing cookies.
+        $this->assertStringContainsString('max-age=', $response->headers->get('Cache-Control'));
+        $this->assertStringNotContainsString('Cookie', $response->headers->get('Vary'));
+
+        // Only the widths the site uses, and never outside the images folder.
+        $this->assertNull(ImageVariants::parse('_v/799/safari.jpg.webp'));
+        $this->assertNull(ImageVariants::parse('_v/800/../.env.webp'));
+    }
+
     public function test_unsigned_or_tampered_urls_are_rejected(): void
     {
         $this->fetch('/media/image/hero-poster.jpg')->assertForbidden();
@@ -122,7 +146,7 @@ class ProtectedMediaTest extends TestCase
         $this->withCookie(config('session.cookie'), $this->sessionId)->get('/')
             ->assertOk()
             ->assertSee('data-stream="/media/stream/hero/index.m3u8?', false)
-            ->assertSee('/media/image/hero-poster.jpg', false)
+            ->assertSee('/media/image/_v/1600/hero-poster.jpg.', false) // resized copy
             ->assertDontSee('.mp4', false);
     }
 }

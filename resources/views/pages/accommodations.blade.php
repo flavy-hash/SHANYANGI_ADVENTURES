@@ -8,7 +8,8 @@
         title="Where You'll Stay"
         kicker="Lodges, Camps & Beach Stays"
         subtitle="Hand-picked places to rest between adventures, from canvas under the stars to villas by the ocean."
-        image="https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=2000&q=75"
+        image="site/accommodation-mountain-lounge.webp"
+        focus="center 40%"
         :crumbs="array_filter([['label' => 'Accommodation', 'url' => route('accommodations')], $activeLabel ? ['label' => $activeLabel] : null])"
     />
 

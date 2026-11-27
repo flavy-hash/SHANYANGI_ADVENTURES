@@ -8,7 +8,8 @@
         title="Activities & Experiences"
         kicker="Beyond the Game Drive"
         subtitle="Walking safaris, waterfalls, village visits, balloon flights and island days to add to any journey."
-        image="https://images.unsplash.com/photo-1507608616759-54f48f0af0ee?auto=format&fit=crop&w=2000&q=75"
+        image="site/activities-balloon.webp"
+        focus="center 18%"
         :crumbs="array_filter([['label' => 'Activities', 'url' => route('activities')], $activeLabel ? ['label' => $activeLabel] : null])"
     />
 

@@ -37,7 +37,7 @@
                 </div>
 
                 <div class="tm-split-media" data-protected-media>
-                    <img src="{{ \App\Support\ProtectedMedia::src($about['story_image'] ?: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1000&q=75') }}" alt="" loading="lazy" decoding="async" draggable="false">
+                    <img src="{{ \App\Support\ProtectedMedia::src($about['story_image'] ?: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1000&q=75', 1200) }}" alt="" loading="lazy" decoding="async" draggable="false">
                 </div>
             </div>
         </div>

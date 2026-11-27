@@ -1,23 +1,28 @@
-@use('App\Support\ProtectedMedia')
+@use('App\Support\HomePage')
 
 @php
-    // Encrypted stream + poster from protected storage (config/site.php, config/media.php).
-    $heroStream = ProtectedMedia::streamUrl(config('site.hero_stream'));
-    $heroPoster = ProtectedMedia::imageUrl(config('site.hero_poster'))
-        ?? 'https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=2000&q=80';
-
-    $phrases = ['Welcome to Shanyangi Adventures', 'Your Local Guide to Unforgettable Safaris'];
+    // Headlines, buttons, photo and video are edited in the admin (Pages → Home page).
+    $hero = HomePage::hero();
+    $heroPoster = $hero['poster'];
+    $phrases = $hero['phrases'];
 @endphp
+
+{{-- The poster is the first thing people see: fetch it straight away, before CSS and scripts. --}}
+@push('head')
+    <link rel="preload" as="image" href="{{ $heroPoster }}" fetchpriority="high">
+@endpush
 
 <section class="tm-home-hero" style="background-image: url('{{ $heroPoster }}')" data-hero-parallax data-protected-media>
     <div class="tm-hero-media" aria-hidden="true">
-        @if ($heroStream)
-            {{-- No src: resources/js/protected-media.js attaches the encrypted HLS stream. --}}
-            <video class="tm-hero-media-element" data-stream="{{ $heroStream }}" autoplay muted loop playsinline preload="none"
+        {{-- Poster as a real image: shows first (and counts as the page's main content); the video fades in on top once it plays. --}}
+        <img class="tm-hero-media-element" src="{{ $heroPoster }}" alt="" fetchpriority="high" decoding="async" draggable="false">
+        @if ($hero['video'])
+            {{-- No src: resources/js/protected-media.js attaches the encrypted HLS stream, or the signed video file. --}}
+            <video class="tm-hero-media-element"
+                   @if ($hero['video']['type'] === 'stream') data-stream="{{ $hero['video']['url'] }}" @else data-src="{{ $hero['video']['url'] }}" @endif
+                   autoplay muted loop playsinline preload="none"
                    poster="{{ $heroPoster }}" tabindex="-1"
                    controlslist="nodownload noplaybackrate noremoteplayback" disablepictureinpicture disableremoteplayback></video>
-        @else
-            <img class="tm-hero-media-element" src="{{ $heroPoster }}" alt="" fetchpriority="high" decoding="async" draggable="false">
         @endif
     </div>
 
@@ -31,9 +36,17 @@
                 <span class="tm-hero-typewriter notranslate" translate="no" data-hero-typewriter aria-hidden="true">{{ $phrases[0] }}</span>
             </h1>
 
-            <div class="tm-home-hero-actions mt-10 flex items-center justify-center gap-3">
-                <a href="{{ url('/safaris') }}" class="tm-home-hero-cta tm-btn-outline">Explore Experiences</a>
-            </div>
+            @if ($hero['subtitle'])
+                <p class="tm-home-hero-subtitle">{{ $hero['subtitle'] }}</p>
+            @endif
+
+            @if ($hero['buttons'])
+                <div class="tm-home-hero-actions mt-10 flex flex-wrap items-center justify-center gap-3">
+                    @foreach ($hero['buttons'] as $button)
+                        <a href="{{ $button['url'] }}" class="tm-home-hero-cta tm-btn-outline">{{ $button['label'] }}</a>
+                    @endforeach
+                </div>
+            @endif
         </div>
     </div>
 </section>

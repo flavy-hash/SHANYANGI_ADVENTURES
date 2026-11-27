@@ -33,17 +33,22 @@ class QuotePdf
             return [];
         }
 
+        // Group prices depend on everyone travelling; children pay the child price when set.
+        $perPerson = $package->pricePerPerson(max(1, $adults) + $children);
+
         $items = [[
             'description' => $package->title.' ('.($package->duration_label ?? 'package').'), per adult',
             'quantity' => max(1, $adults),
-            'unit_price' => (float) $package->price,
+            'unit_price' => (float) $perPerson,
         ]];
 
         if ($children > 0) {
             $items[] = [
                 'description' => $package->title.', per child',
                 'quantity' => $children,
-                'unit_price' => round($package->price * config('quotes.child_rate_percent') / 100, 2),
+                'unit_price' => $package->child_price
+                    ? (float) $package->child_price
+                    : round($perPerson * config('quotes.child_rate_percent') / 100, 2),
             ];
         }
 

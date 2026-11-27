@@ -82,7 +82,8 @@ class AdminPanelTest extends TestCase
     {
         $this->actingAs($this->admin());
 
-        Livewire::test(ListPackages::class)->assertCanSeeTableRecords(Package::all());
+        // More packages than fit on one page: check the first page, in table order.
+        Livewire::test(ListPackages::class)->assertCanSeeTableRecords(Package::query()->orderBy('sort_order')->take(10)->get());
         Livewire::test(ListBlogPosts::class)->assertCanSeeTableRecords(BlogPost::all());
         Livewire::test(ListReviews::class)->assertCanSeeTableRecords(Review::all());
         Livewire::test(ManageActivities::class)->assertCanSeeTableRecords(Activity::all());
@@ -98,6 +99,7 @@ class AdminPanelTest extends TestCase
                 'title' => 'Tarangire Day Safari',
                 'slug' => 'tarangire-day-safari',
                 'category' => 'Safari',
+                'planned_days' => 1,
                 'summary' => 'A full day among Tarangire\'s elephants.',
                 'price' => 350,
                 'is_published' => true,
