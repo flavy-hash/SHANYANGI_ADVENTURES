@@ -2,7 +2,10 @@
 
 namespace App\Filament\Resources\Reviews\Tables;
 
+use App\Filament\Resources\Reviews\ReviewResource;
 use App\Models\Review;
+use Filament\Tables\Filters\Filter;
+use Illuminate\Database\Eloquent\Builder;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -42,13 +45,26 @@ class ReviewsTable
                     ->sortable(),
                 TextColumn::make('is_sample')
                     ->label('Type')
-                    ->state(fn (Review $record) => $record->is_sample ? 'Sample' : 'Real')
+                    ->state(fn (Review $record) => match (true) {
+                        $record->is_sample => 'Sample',
+                        $record->source === 'website' && ! $record->is_published => 'Awaiting approval',
+                        $record->source === 'website' => 'From website',
+                        default => 'Real',
+                    })
                     ->badge()
-                    ->color(fn (string $state) => $state === 'Sample' ? 'danger' : 'success'),
+                    ->color(fn (string $state) => match ($state) {
+                        'Sample' => 'danger',
+                        'Awaiting approval' => 'warning',
+                        default => 'success',
+                    }),
                 ToggleColumn::make('is_published')
                     ->label('Published'),
             ])
             ->filters([
+                Filter::make('awaiting_approval')
+                    ->label('Awaiting approval (written on the website)')
+                    ->query(fn (Builder $query) => $query->awaitingApproval())
+                    ->toggle(),
                 TernaryFilter::make('is_published')->label('Published'),
                 TernaryFilter::make('is_sample')->label('Sample placeholders'),
                 SelectFilter::make('rating')
@@ -58,6 +74,7 @@ class ReviewsTable
                     ->label('Trip'),
             ])
             ->recordActions([
+                ReviewResource::approveAction()->iconButton()->tooltip('Approve & publish'),
                 EditAction::make(),
                 DeleteAction::make(),
             ])
