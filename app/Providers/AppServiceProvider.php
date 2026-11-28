@@ -25,5 +25,8 @@ class AppServiceProvider extends ServiceProvider
             'livewire.temporary_file_upload.rules' => ['required', 'file', 'max:102400'],
             'livewire.temporary_file_upload.max_upload_time' => 15,
         ]);
+
+        // Phone, WhatsApp, email and address as set in the admin (Site settings).
+        \App\Support\ContactDetails::apply();
     }
 }
