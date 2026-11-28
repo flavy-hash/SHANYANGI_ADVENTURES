@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Contact Us & Plan Your Trip | Shanyangi Adventures')
+@section('title', 'Contact Us & Plan Your Trip')
 @section('description', 'Send a trip request or get in touch with Shanyangi Adventures to start planning your Tanzania safari.')
 
 @php
@@ -120,7 +120,7 @@
                                 <li>
                                     <a href="https://wa.me/{{ $whatsapp }}" target="_blank" rel="noopener" class="tm-contact-item">
                                         <span class="tm-feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5a8.5 8.5 0 0 1-12.5 7.5L3 20l1.1-4.3A8.5 8.5 0 1 1 20 11.5Z"/></svg></span>
-                                        <span><strong>WhatsApp</strong><small>Chat with our team</small></span>
+                                        <span><strong>WhatsApp</strong><small>{{ \App\Support\ContactDetails::display($whatsapp) }}</small></span>
                                     </a>
                                 </li>
                             @endif
@@ -128,7 +128,7 @@
                                 <li>
                                     <a href="tel:{{ $phone }}" class="tm-contact-item">
                                         <span class="tm-feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h1.38a1.5 1.5 0 0 1 1.41 1l.81 2.86a1.5 1.5 0 0 1-.46 1.75l-.9.72a11 11 0 0 0 5.23 5.23l.72-.9a1.5 1.5 0 0 1 1.75-.46l2.86.81a1.5 1.5 0 0 1 1 1.41v1.48a1.5 1.5 0 0 1-1.5 1.5h-.38A13.42 13.42 0 0 1 4 5.98v-.48Z"/></svg></span>
-                                        <span><strong>Call us</strong><small>{{ config('site.phone') }}</small></span>
+                                        <span><strong>Call us</strong><small>{{ \App\Support\ContactDetails::display(config('site.phone')) }}</small></span>
                                     </a>
                                 </li>
                             @endif
