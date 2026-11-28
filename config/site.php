@@ -12,16 +12,22 @@
 
 return [
 
+    // Brand name in page titles, link previews and structured data.
+    'name' => 'Shanyangi Adventures',
+
+    // Contact details below are the starting values. Once saved in the admin
+    // (Pages → Site settings → Contact details) the admin values are used instead.
+
     // International format, digits only or with "+", e.g. 255712345678
-    'whatsapp' => env('SITE_WHATSAPP'),
+    'whatsapp' => env('SITE_WHATSAPP') ?: '255787156775',
 
     'whatsapp_message' => env('SITE_WHATSAPP_MESSAGE', 'Hi Shanyangi Adventures! I am interested in booking a safari.'),
 
     // Dialable phone number, e.g. +255712345678
-    'phone' => env('SITE_PHONE'),
+    'phone' => env('SITE_PHONE') ?: '+255 787 156 775',
 
-    // Footer contact details (each line is hidden until set).
-    'email' => env('SITE_EMAIL'),
+    // Shown on the contact page and in the footer (each line is hidden while empty).
+    'email' => env('SITE_EMAIL') ?: 'info@shanyangiadventures.co.tz',
 
     // Where new bookings are emailed (comma-separate several). The admin setting under
     // Pages → Site settings → Booking emails takes priority; SITE_EMAIL is the last fallback.
