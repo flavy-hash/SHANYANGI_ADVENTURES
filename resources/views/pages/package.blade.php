@@ -16,8 +16,13 @@
     $instantQuote = session('instant_quote');
 @endphp
 
-@section('title', $package['title'].' | Shanyangi Adventures')
+@section('title', $package['title'])
 @section('description', $package['summary'])
+@section('og_image', \App\Support\Seo::image($package->image))
+
+@push('head')
+    <script type="application/ld+json">{!! \App\Support\Seo::json(\App\Support\Seo::trip($package)) !!}</script>
+@endpush
 
 @section('content')
     <x-page-hero
