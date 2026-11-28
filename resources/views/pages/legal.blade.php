@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $page['title'].' | Shanyangi Adventures')
+@section('title', $page['title'])
 @section('description', $page['intro'])
 
 @section('content')
