@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'About Us | Shanyangi Adventures')
+@section('title', 'About Us')
 @section('description', 'Meet Shanyangi Adventures, a locally owned Tanzanian tour company planning private safaris, climbs and beach escapes.')
 
 @use('App\Support\AboutPage')
