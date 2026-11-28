@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', ($activeLabel ? $activeLabel.' ' : '').'Activities & Experiences | Shanyangi Adventures')
+@section('title', ($activeLabel ? $activeLabel.' ' : '').'Activities & Experiences')
 @section('description', 'Day trips and experiences across Tanzania: walking safaris, waterfalls, cultural tours, balloon flights and Zanzibar excursions.')
 
 @section('content')
