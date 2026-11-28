@@ -2,7 +2,7 @@
 
 @use('App\Support\ProtectedMedia')
 
-@section('title', 'Tanzania Tours & Safari Packages | Shanyangi Adventures')
+@section('title', 'Tanzania Tours & Safari Packages')
 @section('description', 'Browse every Shanyangi trip: Tanzania safaris, Kilimanjaro climbs, honeymoons, family trips and Zanzibar escapes. Filter by trip type and length.')
 
 @php

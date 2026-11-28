@@ -32,7 +32,8 @@ deleted = git('diff', '--name-only', '--diff-filter=D', BASE)
 files += tree('public/build/**/*')
 for pattern in media:
     files += tree(pattern)
-files = [f for f in dict.fromkeys(files) if not f.startswith(skip) and os.path.isfile(os.path.join(root, f))]
+files = [f for f in dict.fromkeys(files) if not f.startswith(skip) and not f.endswith(('.zip', '.tar.gz'))
+         and os.path.isfile(os.path.join(root, f))]
 
 with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:
     for f in files:

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', ($activeLabel ? $activeLabel.' ' : '').'Guest Reviews | Shanyangi Adventures')
+@section('title', ($activeLabel ? $activeLabel.' ' : '').'Guest Reviews')
 @section('description', 'Read reviews from travellers who explored Tanzania with Shanyangi Adventures: safaris, Kilimanjaro climbs and Zanzibar holidays.')
 
 @php

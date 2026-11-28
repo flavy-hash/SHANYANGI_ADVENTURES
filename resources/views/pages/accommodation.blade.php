@@ -3,8 +3,9 @@
 @use('App\Support\ProtectedMedia')
 @use('Illuminate\Support\Str')
 
-@section('title', $stay->name.', '.$stay->location.' | Shanyangi Adventures')
+@section('title', $stay->name.', '.$stay->location)
 @section('description', Str::limit(preg_replace('/\s+/', ' ', $stay->description), 155))
+@section('og_image', \App\Support\Seo::image($stay->image))
 
 @section('content')
     @php($photos = $stay->photos)

@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\SiteSetting;
 use App\Support\BankDetails;
 use App\Support\BookingEmails;
+use App\Support\ContactDetails;
 use App\Support\SocialLinks;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -26,8 +27,8 @@ use Throwable;
 use UnitEnum;
 
 /**
- * Social media links (footer, contact page, mobile menu) and the bank accounts
- * printed on quotation PDFs.
+ * Contact details, booking email addresses, social media links (footer, contact page,
+ * mobile menu) and the bank accounts printed on quotation PDFs.
  *
  * @property-read Schema $form
  */
@@ -53,6 +54,7 @@ class EditSiteSettings extends Page
         $bank = SiteSetting::raw(BankDetails::KEY) ?? [];
 
         $this->form->fill([
+            'contact' => ContactDetails::current(),
             'social' => SocialLinks::urls(),
             'booking' => ['emails' => BookingEmails::saved()],
             'bank' => [
@@ -76,6 +78,36 @@ class EditSiteSettings extends Page
         return $schema
             ->statePath('data')
             ->components([
+                Section::make('Contact details')
+                    ->description('Shown on the Contact Us page, in the footer, on the mobile call / WhatsApp buttons and on quote PDFs. Leave a field empty to hide it.')
+                    ->icon(Heroicon::OutlinedPhone)
+                    ->statePath('contact')
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('whatsapp')
+                            ->label('WhatsApp number')
+                            ->tel()
+                            ->maxLength(30)
+                            ->regex('/^\+?[\d\s()-]{7,}$/')
+                            ->placeholder('+255 787 156 775')
+                            ->helperText('With the country code. Used for every WhatsApp button.'),
+                        TextInput::make('phone')
+                            ->label('Phone number')
+                            ->tel()
+                            ->maxLength(30)
+                            ->regex('/^\+?[\d\s()-]{7,}$/')
+                            ->placeholder('+255 787 156 775')
+                            ->helperText('For the "Call us" buttons.'),
+                        TextInput::make('email')
+                            ->label('Email address')
+                            ->email()
+                            ->maxLength(255)
+                            ->placeholder('info@shanyangiadventures.co.tz'),
+                        TextInput::make('address')
+                            ->label('Office address')
+                            ->maxLength(255)
+                            ->placeholder('e.g. Arusha, Tanzania'),
+                    ]),
                 Section::make('Booking emails')
                     ->description('Every new trip request and instant quote is emailed to these addresses, as well as appearing in the admin. Press Enter after each address.')
                     ->icon(Heroicon::OutlinedEnvelope)
@@ -153,6 +185,7 @@ class EditSiteSettings extends Page
         $social = array_map(fn ($url) => $url ?: null, $state['social'] ?? []);
 
         SiteSetting::put(SocialLinks::KEY, $social);
+        SiteSetting::put(ContactDetails::KEY, array_map(fn ($value) => filled($value) ? trim($value) : null, $state['contact'] ?? []));
         SiteSetting::put(BookingEmails::KEY, [
             'emails' => array_values(array_unique(array_map(fn ($email) => strtolower(trim($email)), $state['booking']['emails'] ?? []))),
         ]);

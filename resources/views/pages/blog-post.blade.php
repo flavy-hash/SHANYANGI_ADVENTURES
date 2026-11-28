@@ -1,7 +1,13 @@
 @extends('layouts.app')
 
-@section('title', $post['title'].' | Shanyangi Adventures')
+@section('title', $post['title'])
 @section('description', $post['excerpt'])
+@section('og_type', 'article')
+@section('og_image', \App\Support\Seo::image($post->image))
+
+@push('head')
+    <script type="application/ld+json">{!! \App\Support\Seo::json(\App\Support\Seo::article($post)) !!}</script>
+@endpush
 
 @section('content')
     @php($categoryLabel = $categories[$post['category']] ?? null)
