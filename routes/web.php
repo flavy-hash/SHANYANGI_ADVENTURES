@@ -5,6 +5,15 @@ use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'home')->name('home');
 
+// Search engines: generated from the database and APP_URL (SeoController). Don't add a static
+// public/robots.txt or public/sitemap.xml: the web server would serve that file instead.
+Route::controller(\App\Http\Controllers\SeoController::class)
+    ->withoutMiddleware(\App\Http\Middleware\LogPageView::class)
+    ->group(function () {
+        Route::get('sitemap.xml', 'sitemap')->name('sitemap');
+        Route::get('robots.txt', 'robots')->name('robots');
+    });
+
 // Protected media: only reachable through signed, session-bound URLs (App\Support\ProtectedMedia).Dont touch these routes unless you know what you're doing; they are not meant to be browsed directly.
 Route::middleware('signed:relative')->prefix('media')->name('media.')->controller(ProtectedMediaController::class)->group(function () {
     Route::get('image/{path}', 'image')->where('path', '[A-Za-z0-9/_.\-]+')->name('image');
