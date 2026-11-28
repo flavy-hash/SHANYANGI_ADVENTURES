@@ -11,6 +11,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // One address for search engines: other hosts 301 to APP_URL (CANONICAL_REDIRECT=true).
+        $middleware->prepend(\App\Http\Middleware\CanonicalHost::class);
+
         // Anonymous visitor activity log (admin: Visitor activity). See config/analytics.php.
         $middleware->web(append: [
             \App\Http\Middleware\LogPageView::class,
