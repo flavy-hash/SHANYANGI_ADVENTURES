@@ -69,13 +69,13 @@
                     @if ($phone)
                         <li>
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h1.38a1.5 1.5 0 0 1 1.41 1l.81 2.86a1.5 1.5 0 0 1-.46 1.75l-.9.72a11 11 0 0 0 5.23 5.23l.72-.9a1.5 1.5 0 0 1 1.75-.46l2.86.81a1.5 1.5 0 0 1 1 1.41v1.48a1.5 1.5 0 0 1-1.5 1.5h-.38A13.42 13.42 0 0 1 4 5.98v-.48Z"/></svg>
-                            <a href="tel:{{ $phone }}">{{ config('site.phone') }}</a>
+                            <a href="tel:{{ $phone }}">{{ \App\Support\ContactDetails::display(config('site.phone')) }}</a>
                         </li>
                     @endif
                     @if ($whatsapp)
                         <li>
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5a8.5 8.5 0 0 1-12.5 7.5L3 20l1.1-4.3A8.5 8.5 0 1 1 20 11.5Z"/></svg>
-                            <a href="https://wa.me/{{ $whatsapp }}" target="_blank" rel="noopener">WhatsApp us</a>
+                            <a href="https://wa.me/{{ $whatsapp }}" target="_blank" rel="noopener">WhatsApp: {{ \App\Support\ContactDetails::display($whatsapp) }}</a>
                         </li>
                     @endif
                     <li>
